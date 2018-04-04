@@ -1,0 +1,26 @@
+FROM node:8.9.4 as base
+
+RUN mkdir -p /opt/app
+WORKDIR /opt/app
+
+COPY .npmrc .
+COPY package.json .
+COPY package-lock.json .
+RUN npm install --production
+
+FROM base AS test
+RUN npm install
+COPY . .
+RUN npm run compile > /dev/null
+RUN npm run test > /dev/null
+
+FROM base as prerelease
+COPY --from=test /opt/app/js ./js
+COPY . /opt/app
+
+FROM node:8.9.4
+RUN mkdir -p /opt/app
+WORKDIR /opt/app
+COPY --from=prerelease /opt/app/ ./
+EXPOSE 5000
+CMD [ "npm", "run", "start:only" ]

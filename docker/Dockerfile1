@@ -1,0 +1,12 @@
+FROM node:8.9.4 as base
+
+RUN mkdir -p /opt/app
+WORKDIR /opt/app
+
+COPY . .
+RUN npm install
+RUN npm run compile > /dev/null
+RUN npm run test > /dev/null
+
+EXPOSE 5000
+CMD [ "npm", "run", "start:only" ]

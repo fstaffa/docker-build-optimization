@@ -1,0 +1,21 @@
+FROM node:8.9.4 as base
+
+RUN mkdir -p /opt/app
+WORKDIR /opt/app
+
+COPY .npmrc .
+COPY package.json .
+COPY package-lock.json .
+RUN npm install --production
+
+FROM base AS test
+RUN npm install
+COPY . .
+RUN npm run compile > /dev/null
+RUN npm run test > /dev/null
+
+FROM base as release
+COPY --from=test /opt/app/js ./js
+COPY . /opt/app
+EXPOSE 5000
+CMD [ "npm", "run", "start:only" ]
